@@ -99,3 +99,5 @@ class Produto:
     def TABELA_EXCEL(self, INFOS_EXCEL, COLUNAS, PORCENTAGENS):
         from Planilha import GeraradorPlanilha
         GeraradorPlanilha.gerarPlanilha(INFOS_EXCEL, COLUNAS, PORCENTAGENS)
+
+
