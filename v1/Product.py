@@ -4,7 +4,7 @@ class Produto:
     receitaBruta = 0
     INFOS_EXCEL = {}
 
-    def __init__(self, ID_PRODUTO, nome, descrição, CP, CF, CV, IV, ML):
+    def __init__(self, ID_PRODUTO, nome, descrição, CP, CF, CV, IV, ML, CATEGORIA_PRODUTO):
         #Tenho que fazer os valores serem INPUTS e fazer uma classe para verificar os valores do input se for <0 ou == 0 não deverá ser aceito ou se não for um número.
         self.ID = ID_PRODUTO
         self.nome = nome
@@ -18,6 +18,7 @@ class Produto:
         self.classificaoLucro = self.verificarClassificacaoLucro(self.rentabilidade)
         self.receitaBruta_procentagem = CF+CV+IV+ML
         self.fornecedor_porcentagem = (1 - (float(self.receitaBruta_procentagem)/100)) * 100
+        self.categoria_produto=CATEGORIA_PRODUTO
         
 
     def calcularPrecoDeVenda(self, CP, CF, CV, IV, ML):
