@@ -1,4 +1,4 @@
-from Product import Produto
+from Produto.Product import Produto
 
 class InputErrorValidation(Exception):
     def __init__(self, INPUT_VALUE, ERROR_TYPE, ERROR_PARAM, ERROR_VALUE):
@@ -8,14 +8,17 @@ class InputErrorValidation(Exception):
         self.ERROR_VALUE = ERROR_VALUE
 
 def validar(PRODUTO: Produto) -> bool:
+    somaPorcentagem = 0
     inputs_percentuais = ["custo_fixo", "comissao", "impostos", "rentabilidade"]
     if PRODUTO.custo_produto <= 0:
         raise InputErrorValidation(PRODUTO, "InvalidProductPrice", "Custo do Produto", PRODUTO.custo_produto)
     else:
         for inputs in inputs_percentuais:
-            if getattr(PRODUTO, inputs) < 0:
-                raise InputErrorValidation(PRODUTO, "InvalidPorcentValue", inputs, getattr(PRODUTO, inputs))
-
+                somaPorcentagem += getattr(PRODUTO,inputs)
+            
+    if somaPorcentagem >= 100:
+        raise InputErrorValidation(PRODUTO, "PorcentExceed100%", "", "")
+    
     print("\033[92mProduto cadastrado com sucesso!\033[0m")
     return True
 
