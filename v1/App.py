@@ -5,6 +5,7 @@ from EntradasProduto import inputs as i
 import random as rd
 from Interface import main as INTERFACE
 INTERFACE.main()
+
 def cadastrarProduto() -> Produto:
     produto_infos = i.inputs_produto()
 
