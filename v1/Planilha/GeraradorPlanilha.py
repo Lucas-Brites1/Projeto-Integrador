@@ -1,8 +1,16 @@
 import os
 import time
 
-try:
-    import openpyxl
+def gerarPlanilha(PRODUTO_INFOS_EXCELL, COLUNAS, PORCENTAGENS):
+    try:
+        if not os.path.exists("ExcelGerados"):
+            os.makedirs("ExcelGerados")
+            
+        print("\nGerando PDF", end="") #end="" garante que os pontos ... serão mostrados após o Gerando PDF -> Gerando PDF. -> Gerando PDF.. -> Gerando PDF...
+        for contador in range(1, 4):
+            print("\033[0;31m.\033[m", end="", flush=True)  #flush serve para limpar o buffer
+            time.sleep(0.35)
+        print()  
 
     def gerarPlanilha(PRODUTO_INFOS_EXCELL, COLUNAS, PORCENTAGENS):
         try:

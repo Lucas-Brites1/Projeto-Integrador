@@ -4,24 +4,28 @@ class Produto:
     receitaBruta = 0
     INFOS_EXCEL = {}
 
-    def __init__(self, ID_PRODUTO, nome, descrição, CP, CF, CV, IV, ML):
+    def __init__(self, ID_PRODUTO, nome, descrição, CP, CF, CV, IV, ML, CATEGORIA_PRODUTO):
         #Tenho que fazer os valores serem INPUTS e fazer uma classe para verificar os valores do input se for <0 ou == 0 não deverá ser aceito ou se não for um número.
         self.ID = ID_PRODUTO
         self.nome = nome
         self.descricao = descrição
         self.custo_produto = CP
-        self.custo_fixo = CF
-        self.comissao = CV
-        self.impostos = IV
-        self.rentabilidade = ML
+        self.custo_fixo = int(CF)
+        self.comissao = int(CV)
+        self.impostos = int(IV)
+        self.rentabilidade = int(ML)
         self.precoVenda = self.calcularPrecoDeVenda(self.custo_produto, self.custo_fixo, self.comissao, self.impostos, self.rentabilidade)
         self.classificaoLucro = self.verificarClassificacaoLucro(self.rentabilidade)
         self.receitaBruta_procentagem = CF+CV+IV+ML
         self.fornecedor_porcentagem = (1 - (float(self.receitaBruta_procentagem)/100)) * 100
+        self.categoria_produto=CATEGORIA_PRODUTO
         
 
     def calcularPrecoDeVenda(self, CP, CF, CV, IV, ML):
-        return CP / (1 - ((CF + CV + IV + ML) / 100))
+        try:
+            return float(CP) / (1 - ((int(CF) + int(CV) + int(IV) + int(ML)) / 100))
+        except ValueError as ERROR_TYPE:
+            print(F"Erro> {ERROR_TYPE}")
 
     def verificarClassificacaoLucro(self, RENTABILIDADE):
         classificacoes = ["Alto", "Lucro médio", "Lucro baixo", "Equilíbrio", "Prejuízo"]
@@ -99,3 +103,5 @@ class Produto:
     def TABELA_EXCEL(self, INFOS_EXCEL, COLUNAS, PORCENTAGENS):
         from Planilha import GeraradorPlanilha
         GeraradorPlanilha.gerarPlanilha(INFOS_EXCEL, COLUNAS, PORCENTAGENS)
+
+
