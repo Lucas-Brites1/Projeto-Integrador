@@ -1,5 +1,8 @@
 import tkinter as tk
 import customtkinter
+import sys
+sys.path.append("C:\\Users\\Lucas\\OneDrive\\Área de Trabalho\\Faculdade-SI\\Projeto-Integrador\\v1")
+import App
 
 class Interface():
     def __init__(self, master):
@@ -16,8 +19,8 @@ class Interface():
         #Obtendo as dimensões da tela do usuário
         screen_width = self.master.winfo_screenwidth()
         screen_height = self.master.winfo_screenheight()
-        x = (screen_width - 820) // 2
-        y = (screen_height - 820) // 2
+        x = (screen_width - (window_width - 300)) // 2
+        y = (screen_height - (window_height + 300)) // 2
         self.master.geometry(f"{window_width}x{window_height}+{x}+{y}")
 
         self.buttons_frame = tk.Frame(self.master, bg="#141414")
@@ -53,7 +56,7 @@ class Interface():
 
     def abrir_caixas_inputs(self):
         # Criando 6 caixas de entrada com rótulos correspondentes
-        self.labels = ["Nome do Produto", "Descrição", "Custo do Produto (CP): R$", "Custo Fixo/Adminstrativo (CF): %", "Comissão de Vendas (CV): %", "Impostos (IV): %", "Margem de Lucro (ML): %"]
+        self.labels = ["Nome do Produto", "Descrição do Produto", "Categoria do Produto", "Custo do Produto (CP): R$", "Custo Fixo/Adminstrativo (CF): %", "Comissão de Vendas (CV): %", "Impostos (IV): %", "Margem de Lucro (ML): %"]
 
         self.text_areas=[]
         frame = customtkinter.CTkFrame(self.master, width=200, height=200)
@@ -71,9 +74,9 @@ class Interface():
 
             self.text_areas.append(text_box)  # Adicionando a área de texto à lista
             
-        self.master.geometry("350x650")
+        self.master.geometry("350x700")
 
-        button_send_data = customtkinter.CTkButton(frame, text="Enviar", command=self.cadastrar_produto, corner_radius=5, anchor="center")
+        button_send_data = customtkinter.CTkButton(frame, text="Enviar", command=lambda frame=frame: self.cadastrar_produto(frame), corner_radius=5, anchor="center")
         button_send_data.pack(pady=10)
             
         button_back = customtkinter.CTkButton(frame, text="Voltar", command=lambda frame=frame: self.back_to_default_page(frame), hover=True, hover_color="#FF0000", corner_radius=5, anchor="center")
@@ -83,12 +86,21 @@ class Interface():
         # Função temporária para visualizar produtos
         print("Visualizando produtos...")
 
-    def cadastrar_produto(self):
+    def cadastrar_produto(self, frameToDestroyAfterRegisterProduct):
         dados={}
+    
         for i, text_area in enumerate(self.text_areas):
-            dados[self.labels[i]] = text_area.get("1.0", "end-1c")
-        print("Dados digitados: ")
-        print(dados)
+            try:
+                # Verifica se o campo atual é numérico
+                if i in [3, 4, 5, 6, 7]:  # Índices dos campos numéricos
+                    dados[self.labels[i]] = float(text_area.get("1.0", "end-1c"))
+                else:
+                    dados[self.labels[i]] = text_area.get("1.0", "end-1c")
+            except ValueError:
+                dados[self.labels[i]] = text_area.get("1.0", "end-1c")  # Se a conversão falhar, mantenha a string
+        
+        App.cadastrarProduto(interface=True, dados_produto=dados)
+        self.back_to_default_page(frame=frameToDestroyAfterRegisterProduct)
 
 def main():
     root = customtkinter.CTk()
