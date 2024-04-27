@@ -3,6 +3,8 @@ from Planilha import GeraradorPlanilha
 from Validar import inputValidation as VALIDAR
 from EntradasProduto import inputs as i
 import random as rd
+from time import sleep
+from DB import DataBase as DB
 
 def cadastrarProduto(interface=False, dados_produto=None) -> Produto:
     random_id = rd.randint(0, 1000000)
@@ -32,18 +34,7 @@ def cadastrarProduto(interface=False, dados_produto=None) -> Produto:
             print("[ERRO NO CADASTRO DO PRODUTO]")
             return None
     else:
-        """
-        {
-            'Nome do Produto': 'teste_nome', 
-            'Descrição do Produto': 'teste_descricao', 
-            'Categoria do Produto': 'teste_categoria', 
-            'Custo do Produto (CP): R$': '36', 
-            'Custo Fixo/Adminstrativo (CF): %': '15', 
-            'Comissão de Vendas (CV): %': '5', 
-            'Impostos (IV): %': '12', 
-            'Margem de Lucro (ML): %': '20'}
-        """
-
+        
         try:
             CP_I = float(dados_produto["Custo do Produto (CP): R$"])
             CF_I = int(dados_produto["Custo Fixo/Adminstrativo (CF): %"])
@@ -60,7 +51,9 @@ def cadastrarProduto(interface=False, dados_produto=None) -> Produto:
         if VALIDAR.__(produto) not in [None, True]:
             print("[ERRO NO CADASTRO DO PRODUTO]")
             return None
-
+        
+    DB.db.cadastrarProdutoDB(NOME_PRODUTO=produto.nome, DESCRICAO_PRODUTO=produto.descricao, PRECO_VENDA_PRODUTO=produto.precoVenda)
+    sleep(1.2)
     produto.TABELA()
     return produto
 

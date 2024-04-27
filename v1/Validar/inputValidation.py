@@ -8,6 +8,8 @@ class InputErrorValidation(Exception):
         self.ERROR_VALUE = ERROR_VALUE
 
 def validar(PRODUTO: Produto) -> bool:
+    if PRODUTO.nome=="" or PRODUTO.categoria_produto=="" or PRODUTO.descricao=="":
+        raise InputErrorValidation(PRODUTO, "BlankInformations", "NOME||CATEGORIA||DESCRIÇÃO", None)
     somaPorcentagem = 0
     inputs_percentuais = ["custo_fixo", "comissao", "impostos", "rentabilidade"]
     if PRODUTO.custo_produto <= 0:

@@ -7,6 +7,10 @@ current_directory=os.path.dirname(__file__)
 parent_directory=os.path.dirname(current_directory)
 sys.path.append(parent_directory)
 import App
+from DB import DataBase as DB
+import visualizarProdutos
+from time import sleep
+import tkinter.messagebox as messagebox
 
 class Interface():
     def __init__(self, master):
@@ -32,7 +36,7 @@ class Interface():
 
     def menu(self, frameButton):
         # 1. Alterações no Produto
-        self.btn_produto_opcoes = customtkinter.CTkButton(frameButton, text="Alterar/Cadastrar Produto", command=lambda frameToClear=self.buttons_frame: self.menu_metodos_produto(frameToClear), width=50, height=5, font=("Segoe UI", 20))
+        self.btn_produto_opcoes = customtkinter.CTkButton(frameButton, text="Funcionalidades", command=lambda frameToClear=self.buttons_frame: self.menu_metodos_produto(frameToClear), width=50, height=5, font=("Segoe UI", 20))
         self.btn_produto_opcoes.configure(corner_radius=5, width=20, height=2)
         self.btn_produto_opcoes.pack(expand=True, fill="both", padx=10, pady=10)
         
@@ -53,11 +57,11 @@ class Interface():
         btn_cadastro_produto.pack(expand=True, fill="both", padx=10, pady=10)
 
         #? Botão 2: Alterar Informações x
-        btn_alterar_produto = customtkinter.CTkButton(frame_buttons_menu_produto, text="Alterar Informações", width=40, height=4, font=("Segoe UI", 20))
+        btn_alterar_produto = customtkinter.CTkButton(frame_buttons_menu_produto, text="Alterar Informações", width=40, height=4, font=("Segoe UI", 20), command= lambda frameToClear=frame_buttons_menu_produto: self.alterar_informacoes_produto(frameToClear=frameToClear))
         btn_alterar_produto.pack(expand=True, fill="both", padx=10, pady=10)
 
         #? Botão 3: Visualizar Produtos
-        btn_visualizar_produtos = customtkinter.CTkButton(frame_buttons_menu_produto, text="Visualizar Produtos", width=40, height=4, font=("Segoe UI", 20), command= lambda frame=frameToClear: self.visualizar_produtos(frameToClear=frame_buttons_menu_produto))
+        btn_visualizar_produtos = customtkinter.CTkButton(frame_buttons_menu_produto, text="Visualizar Produtos", width=40, height=4, font=("Segoe UI", 20), command= lambda: self.visualizar_produtos())
         btn_visualizar_produtos.pack(expand=True, fill="both", padx=10, pady=10)
 
         #? Botão 4: Deletar Produto
@@ -111,46 +115,10 @@ class Interface():
         button_back = customtkinter.CTkButton(frame, text="Voltar", command=lambda frame=frame: self.menu_metodos_produto(frame), hover=True, hover_color="#FF0000", corner_radius=5, anchor="center", height=10, width=40)
         button_back.pack(expand=True, fill="both", padx=10, pady=10)
         
-    def visualizar_produtos(self, frameToClear):
-        self.exit_function(frame=frameToClear)
-        self.master.geometry("800x800")
-
-        treeFrame = ttk.Frame(self.master)
-        treeFrame.pack(expand=True, fill="both")
-
-        produtos_teste = (("tenis", 30.50), ("calça", 20.50), ("chapeu", 35.25))
-        infos_cols = ("Produto", "Preço de Venda")
-
-        style = ttk.Style()
-        style.theme_use("default")
-        style.configure("Treeview.Heading", background="#141414", foreground="white", fieldbackground="#141414", font=("Segoe UI", 16))  # Definindo a cor de fundo, cor do texto e fonte da tabela
-        style.configure("Treeview", background="#161616", foreground="white", fieldbackground="#161616", font=("Segoe UI", 12))  # Definindo a cor de fundo, cor do texto e fonte da tabela
-        style.map("Treeview", background=[("selected", "#0078d7")])  # Definindo a cor de fundo quando uma linha é selecionada
-
-        treeview = ttk.Treeview(treeFrame, show="headings", columns=infos_cols, height=13)
-        treeview.pack(expand=True, fill="both")
-
-        # Definindo as colunas
-        for col in infos_cols:
-            treeview.heading(col, text=col, anchor="center")
-            treeview.column(col, anchor="center")  # Centralizando o texto nas células
-
-        # Adicionando os valores
-        for produto in produtos_teste:
-            treeview.insert("", tk.END, values=produto, tags=("produto",),)
-
-        # Atualizando o Treeview
-        treeview.update_idletasks()
-
-
-def confirmar_produto(self, event):
-    item = event.widget.selection()[0]
-    values = event.widget.item(item)["values"]
-    if values:  # Verifica se uma linha foi clicada
-        nome_produto, preco_venda, _ = values  # Obtém as informações do produto
-        # Aqui você pode realizar as ações desejadas com as informações do produto
-        print(f"Produto confirmado: {nome_produto} - Preço de venda: R${preco_venda}")
-
+    def visualizar_produtos(self):
+        TABELA_PRODUTOS = visualizarProdutos.TabelaProdutos()
+        TABELA_PRODUTOS.gerarTabelaInterface(PRODUTOS=DB.db.fazerPesquisa())
+        TABELA_PRODUTOS.root.mainloop()
 
     def cadastrar_produto(self, frameToDestroyAfterRegisterProduct):
         dados={}
@@ -168,13 +136,56 @@ def confirmar_produto(self, event):
         App.cadastrarProduto(interface=True, dados_produto=dados)
         self.back_to_default_page(frame=frameToDestroyAfterRegisterProduct)
 
-    def alterar_informacoes_produto(self, parametroBusca: dict):
-        # busca_por = parametroBusca["PARAMETRO"] # pode ser ID ou NOME
-        # valor_busca = vai ser o valor do ID ou o NOME do produto
-        # chama a busca do banco de dados por meio dos dois valores acima BUSCAR_BD(busca_por, valor_busca) -> f"SELECT * FROM BD WHERE (ID ou NOME) = {busca_por}"
-        return
+    def alterar_informacoes_produto(self, frameToClear):
+        self.exit_function(frame=frameToClear)
+        self.master.geometry("250x175")
+        alterar_informacoes_frame = customtkinter.CTkFrame(self.master, width=600, height=600, fg_color="#141414")
+        alterar_informacoes_frame.pack()
+
+        busca_parametro_label = customtkinter.CTkLabel(alterar_informacoes_frame, text="Insira o Nome ou ID do Produto:")
+        busca_parametro_label.pack(expand=True, fill="both")
+
+        busca_parametro_textbox = customtkinter.CTkTextbox(alterar_informacoes_frame, height=2)
+        busca_parametro_textbox.pack(expand=True, fill="both", pady=15)
+
+        botao_busca_parametro_banco_de_dados = customtkinter.CTkButton(alterar_informacoes_frame, corner_radius=40, hover=True, hover_color="green", text="Buscar", command= lambda : buscar_produto(), width=100)
+        botao_busca_parametro_banco_de_dados.pack(expand=True, fill="both")
+
+        def buscar_produto():
+            input_value_busca = busca_parametro_textbox.get("1.0", "end-1c")
+            if input_value_busca=="":
+                messagebox.showerror("Erro", "Por favor, insira o Nome ou ID do Produto.")
+            else:
+                produto = DB.db.visualizarProdutos(TAG=input_value_busca)
+                busca_parametro_label.destroy()
+                busca_parametro_textbox.destroy()
+                botao_busca_parametro_banco_de_dados.destroy()
+                self.master.geometry("250x600")
+
+                # Cria novos campos para editar as informações do produto
+                novo_nome_label = customtkinter.CTkLabel(alterar_informacoes_frame, text="Novo Nome do Produto:")
+                novo_nome_label.pack(expand=True, fill="both")
+                novo_nome_textbox = customtkinter.CTkTextbox(alterar_informacoes_frame, height=2)
+                novo_nome_textbox.pack(expand=True, fill="both")
+                novo_nome_textbox.insert("1.0", produto[0][1])
+
+                nova_descricao_label = customtkinter.CTkLabel(alterar_informacoes_frame, text="Nova Descrição do Produto:")
+                nova_descricao_label.pack(expand=True, fill="both")
+                nova_descricao_textbox = customtkinter.CTkTextbox(alterar_informacoes_frame, height=2)
+                nova_descricao_textbox.pack(expand=True, fill="both")
+                nova_descricao_textbox.insert("1.0", produto[0][2])
+
+                novo_preco_label = customtkinter.CTkLabel(alterar_informacoes_frame, text="Novo Preço do Produto:")
+                novo_preco_label.pack(expand=True, fill="both")
+                novo_preco_textbox = customtkinter.CTkTextbox(alterar_informacoes_frame, height=2)
+                novo_preco_textbox.pack(expand=True, fill="both")
+                novo_preco_textbox.insert("1.0", produto[0][3])
+
+        botao_voltar_menu_produtos = customtkinter.CTkButton(alterar_informacoes_frame, corner_radius=40, hover=True, hover_color="green", text="Voltar ao menu", command=lambda: self.menu_metodos_produto(frameToClear=alterar_informacoes_frame))
+        botao_voltar_menu_produtos.pack(expand=True, fill="both", pady=20)
 
 def main():
+
     root = customtkinter.CTk()
     app = Interface(root)
     root.mainloop()

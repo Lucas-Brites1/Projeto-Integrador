@@ -1,4 +1,0 @@
-É necessário a instalação da biblioteca openpyxl para rodar o arquivo App.py.
-
--> Acesse o terminal do diretório do projeto e digite:
-	pip install openpyxl
