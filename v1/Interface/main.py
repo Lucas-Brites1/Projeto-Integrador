@@ -13,6 +13,7 @@ from time import sleep
 import tkinter.messagebox as messagebox
 
 class Interface():
+    
     def __init__(self, master):
         self.master = master
         self.master.title("Gerenciador de Produtos")
