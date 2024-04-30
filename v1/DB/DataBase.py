@@ -1,7 +1,7 @@
 import mysql.connector as SQL
 
 class DATABASE():
-    def __init__(self, PASSWD: str, DATABASE: str, TABLE: str, HOST="", PORT=3306, USER="root", ):
+    def __init__(self, PASSWD: str, DATABASE: str, TABLE: str, HOST="localhost", PORT=3306, USER="root", ):
         self.DB = SQL.connect(
             host=HOST,
             port=PORT,
@@ -68,19 +68,37 @@ class DATABASE():
         return None
     
     def deletarProduto(self, SEARCH_PARAMETER_TO_DELETE):
-        if type(SEARCH_PARAMETER_TO_DELETE) == int:
-            ID_PRODUTO = SEARCH_PARAMETER_TO_DELETE
-            QUERY_ID = F"DELETE FROM {self.INFOS["table"]} WHERE ID LIKE {ID_PRODUTO}"
-            self.cursor.execute(QUERY_ID, (ID_PRODUTO, ))
-        else:
-            QUERY = F"DELETE FROM {self.INFOS["table"]} WHERE NOME LIKE %s"
-            self.cursor.execute(QUERY, (SEARCH_PARAMETER_TO_DELETE, ))
-        
-        self.DB.commit
+        SEARCH_PARAMETER_TO_DELETE.strip()
+        try:
+            ID_PRODUTO = int(SEARCH_PARAMETER_TO_DELETE)
+            QUERY = F"DELETE FROM {self.INFOS['table']} WHERE ID = %s"
+            VALUES = (ID_PRODUTO,)
+            self.cursor.execute(QUERY, VALUES)
+        except ValueError:
+            QUERY = F"DELETE FROM %s WHERE NOME LIKE %s"
+            VALUES = (self.INFOS["table"], SEARCH_PARAMETER_TO_DELETE)
+            self.cursor.execute(QUERY, VALUES)
+
+        self.DB.commit()
         print(F"PRODUTO: {SEARCH_PARAMETER_TO_DELETE} excluído com sucesso.")
 
-    def atualizarProduto(self, SEARCH_PARAMETER_TO_MODIFY):
-        return
+    def atualizarProduto(self, PRODUTO, PRODUTO_ATUALIZADO):
+        NOME_ANTIGO=PRODUTO[0][1]
+        DESCRICAO_ANTIGA=PRODUTO[0][2]
+        VALOR_ANTIGO=PRODUTO[0][3]
+
+        novo_nome = PRODUTO_ATUALIZADO["NOME"]
+        novo_valor = PRODUTO_ATUALIZADO["VALOR"]
+        nova_descricao = PRODUTO_ATUALIZADO["DESCRICAO"]
+
+        query = "UPDATE PRODUTO SET NOME = %s, DESCRICAO = %s, PRECO = %s WHERE NOME = %s AND DESCRICAO = %s AND PRECO = %s"
+        valores = (novo_nome, nova_descricao, novo_valor, NOME_ANTIGO, DESCRICAO_ANTIGA, VALOR_ANTIGO)
+
+        self.cursor.execute(query, valores)
+
+        self.DB.commit()
+        print("Produto atualizado com sucesso!")
+    
         
 db = DATABASE(PASSWD="@Ninazoemayla32290282", DATABASE="PRODUTOS", TABLE="PRODUTO")
 db.produtoJaCadastrado(NOME_PRODUTO_VERIFICAR="teste")
