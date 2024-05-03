@@ -11,45 +11,47 @@ from DB import DataBase as DB
 import visualizarProdutos
 from time import sleep
 import tkinter.messagebox as messagebox
+import MySQLdb
 
 class Interface():
     
     def __init__(self, master):
         self.master = master
         self.master.title("Gerenciador de Produtos")
-        self.master.config(bg="#141414")
-        customtkinter.set_appearance_mode("dark")
-        customtkinter.set_default_color_theme("dark-blue")
 
         #Dimensões do programa
-        window_width= 465
-        window_height = 200
+        window_width= 450
+        window_height = 210
 
         #Obtendo as dimensões da tela do usuário
         screen_width = self.master.winfo_screenwidth()
         screen_height = self.master.winfo_screenheight()
-        x = (screen_width - (window_width - 300)) // 2
-        y = (screen_height - (window_height + 500)) // 2
-        self.master.geometry(f"{window_width}x{window_height}+{x}+{y}")
+        self.x = (screen_width - (window_width - 300)) // 2
+        self.y = (screen_height - (window_height + 500)) // 2
+        self.master.geometry(f"{window_width}x{window_height}+{self.x}+{self.y}")
 
-        self.buttons_frame = tk.Frame(self.master, bg="#141414")
+        self.buttons_frame = tk.Frame(self.master)
         self.menu(self.buttons_frame)
+        self.master.call("source", "forest-dark.tcl")
+        self.style = ttk.Style(self.master)
+        self.style.theme_use("forest-dark")
 
     def menu(self, frameButton):
+        self.master.title("Menu")
         # 1. Alterações no Produto
-        self.btn_produto_opcoes = customtkinter.CTkButton(frameButton, text="Funcionalidades", command=lambda frameToClear=self.buttons_frame: self.menu_metodos_produto(frameToClear), width=50, height=5, font=("Segoe UI", 20))
-        self.btn_produto_opcoes.configure(corner_radius=5, width=20, height=2)
-        self.btn_produto_opcoes.pack(expand=True, fill="both", padx=10, pady=10)
+        self.btn_produto_opcoes = customtkinter.CTkButton(frameButton, text="Funcionalidades", command=lambda frameToClear=self.buttons_frame: self.menu_metodos_produto(frameToClear), font=("Segoe UI", 20), width=self.x/2, height=self.y/2)
+        self.btn_produto_opcoes.pack(fill="both", expand=True, pady=10)
         
         # 2.Botão Sair
-        self.btn_sair = customtkinter.CTkButton(frameButton, text="Sair", command=self.master.quit, width=20, height=1, font=("Segoe UI", 20))
-        self.btn_sair.pack(expand=True, fill="both", padx=10, pady=10)
-        self.btn_sair.configure(corner_radius=5, width=20, height=2, hover_color="red")
-        self.buttons_frame.pack(expand=True, fill="both", padx=10, pady=10)
+        self.btn_sair = customtkinter.CTkButton(frameButton, text="Sair", command=self.master.quit, font=("Segoe UI", 20), width=self.x/2, height=self.y/2)
+        self.btn_sair.pack(fill="both", expand=True)
+
+        self.buttons_frame.pack()
 
     def menu_metodos_produto(self, frameToClear):
+        self.master.title("Menu")
         self.exit_function(frame=frameToClear)
-        self.master.geometry("450x520")
+        self.master.geometry("425x525")
 
         #! Criando Botões de alteração do Produto (Cadastro, Alterar Informações, Deletar Produto, Visualizar Produtos)
         #? Botão 1: Cadastro de Produtos !
@@ -62,7 +64,7 @@ class Interface():
         btn_alterar_produto.pack(expand=True, fill="both", padx=10, pady=10)
 
         #? Botão 3: Visualizar Produtos
-        btn_visualizar_produtos = customtkinter.CTkButton(frame_buttons_menu_produto, text="Visualizar Produtos", width=40, height=4, font=("Segoe UI", 20), command= lambda: self.visualizar_produtos())
+        btn_visualizar_produtos = customtkinter.CTkButton(frame_buttons_menu_produto, text="Visualizar Produtos", width=40, height=4, font=("Segoe UI", 20), command= lambda: self.visualizar_produtos(self.gerarTabela()))
         btn_visualizar_produtos.pack(expand=True, fill="both", padx=10, pady=10)
 
         #? Botão 4: Deletar Produto
@@ -87,6 +89,7 @@ class Interface():
         self.menu(self.buttons_frame)  # Recriar os botões principais
 
     def cadastrando_produto(self, frameToClear):
+        self.master.title("Cadastrar Produto")
         self.exit_function(frame=frameToClear)
 
         # Criando 6 caixas de entrada com rótulos correspondentes
@@ -115,9 +118,14 @@ class Interface():
 
         button_back = customtkinter.CTkButton(frame, text="Voltar", command=lambda frame=frame: self.menu_metodos_produto(frame), hover=True, hover_color="#FF0000", corner_radius=5, anchor="center", height=10, width=40)
         button_back.pack(expand=True, fill="both", padx=10, pady=10)
+
+        #AO CADASTRAR O PRODUTO DEVERÁ RENDERIZAR UMA NOVA TELA COM CHECKBOX SE QUER CADASTRAR NO BANCO DE DADOS E GERAR O EXCELL
         
-    def visualizar_produtos(self):
-        TABELA_PRODUTOS = visualizarProdutos.TabelaProdutos()
+    def visualizar_produtos(self, TABELA):
+        TABELA()
+
+    def gerarTabela(self):
+        TABELA_PRODUTOS =  visualizarProdutos.TabelaProdutos()
         TABELA_PRODUTOS.gerarTabelaInterface(PRODUTOS=DB.db.fazerPesquisa())
         TABELA_PRODUTOS.root.mainloop()
 
@@ -134,14 +142,20 @@ class Interface():
             except ValueError:
                 dados[self.labels[i]] = text_area.get("1.0", "end-1c").strip()  # Se a conversão falhar, mantenha a string
         
-        App.cadastrarProduto(interface=True, dados_produto=dados)
+        if not App.cadastrarProduto(interface=True, dados_produto=dados) or App.cadastrarProduto(interface=True, dados_produto=dados) == False:
+            messagebox.showerror("Cadastro Erro", "Erro ao cadastrar produto, tente novamente.")
         self.back_to_default_page(frame=frameToDestroyAfterRegisterProduct)
 
+    def verificarProdutosConfirmacao(self):
+        if messagebox.askquestion(title="Mostrar Produtos", message="Gostaria de verificar os Produtos registrados?") == "yes":
+            return self.gerarTabela()
+
     def alterar_informacoes_produto(self, frameToClear):
+        self.master.title("Alterar Produto")
         self.exit_function(frame=frameToClear)
-        self.master.geometry("250x175")
+        self.master.geometry("300x200")
         alterar_informacoes_frame = customtkinter.CTkFrame(self.master, width=600, height=600, fg_color="#141414")
-        alterar_informacoes_frame.pack()
+        alterar_informacoes_frame.pack(expand=True, fill="both")
 
         busca_parametro_label = customtkinter.CTkLabel(alterar_informacoes_frame, text="Insira o Nome ou ID do Produto:")
         busca_parametro_label.pack(expand=True, fill="both")
@@ -149,7 +163,7 @@ class Interface():
         busca_parametro_textbox = customtkinter.CTkTextbox(alterar_informacoes_frame, height=2)
         busca_parametro_textbox.pack(expand=True, fill="both", pady=15)
 
-        botao_busca_parametro_banco_de_dados = customtkinter.CTkButton(alterar_informacoes_frame, corner_radius=40, hover=True, hover_color="green", text="Buscar", command=lambda: buscar_produto(), width=100)
+        botao_busca_parametro_banco_de_dados = customtkinter.CTkButton(alterar_informacoes_frame, corner_radius=10, hover=True, hover_color="green", text="Buscar", command=lambda: buscar_produto(), width=100)
         botao_busca_parametro_banco_de_dados.pack(expand=True, fill="both")
 
         def buscar_produto():
@@ -158,6 +172,11 @@ class Interface():
                 messagebox.showerror("Erro", "Por favor, insira o Nome ou ID do Produto.")
             else:
                 produto = DB.db.visualizarProdutos(TAG=input_value_busca)
+                if not produto:
+                    busca_parametro_textbox.insert("1.0", "Produto não encontrado!\n")
+                    sleep(1)
+                    messagebox.askretrycancel(title="Tentar novamente!", message=f"Erro ao tentar encontrar produto.\nGostaria de tentar novamente?")
+                    self.alterar_informacoes_produto(frameToClear=alterar_informacoes_frame)
 
                 busca_parametro_label.destroy()
                 busca_parametro_textbox.destroy()
@@ -185,13 +204,14 @@ class Interface():
 
                 INPUTS_VALORES = [novo_nome_textbox, nova_descricao_textbox, novo_preco_textbox]
 
-                botao_enviar_alteracoes = customtkinter.CTkButton(alterar_informacoes_frame, text="Enviar", command=lambda: self.enviar_alteracoes_produto(produto, text_boxes=INPUTS_VALORES))
+                botao_enviar_alteracoes = customtkinter.CTkButton(alterar_informacoes_frame, text="Enviar", command=lambda: self.enviar_alteracoes_produto(produto, text_boxes=INPUTS_VALORES, frame=alterar_informacoes_frame))
                 botao_enviar_alteracoes.pack(expand=True, fill="both", pady=10)
 
-        botao_voltar_menu_produtos = customtkinter.CTkButton(alterar_informacoes_frame, corner_radius=40, hover=True, hover_color="green", text="Voltar ao menu", command=lambda: self.menu_metodos_produto(frameToClear=alterar_informacoes_frame))
+        botao_voltar_menu_produtos = customtkinter.CTkButton(alterar_informacoes_frame, corner_radius=10, hover=True, hover_color="green", text="Voltar ao menu", command=lambda: self.menu_metodos_produto(frameToClear=alterar_informacoes_frame))
         botao_voltar_menu_produtos.pack(expand=True, fill="both", pady=20)
+        self.verificarProdutosConfirmacao()
 
-    def enviar_alteracoes_produto(self, produto, text_boxes):
+    def enviar_alteracoes_produto(self, produto, text_boxes, frame):
         dados = {
             "NOME": None,
             "DESCRICAO": None,
@@ -205,10 +225,20 @@ class Interface():
                 dados["DESCRICAO"]=valor_input.get("1.0", "end-1c")
             else:
                 dados["VALOR"]=valor_input.get("1.0", "end-1c")   
-        
-        DB.db.atualizarProduto(PRODUTO=produto, PRODUTO_ATUALIZADO=dados)
+
+        try:
+            if DB.db.atualizarProduto(PRODUTO=produto, PRODUTO_ATUALIZADO=dados):
+                if messagebox.askyesno(title=f"Alterando {dados["NOME"]}", message=f"Confirme a alteração do produto: {dados['NOME']}"):
+                    messagebox.showinfo("Alteração", message=F"Alteração do Produto: {dados["NOME"]} concluída.")
+                    self.menu_metodos_produto(frameToClear=frame)
+            else:
+                messagebox.askretrycancel(title="Tentar novamente!", message=f"Erro ao modificar valores do produto, gostaria de tentar novamente?")
+        except ValueError as ve:
+            messagebox.showerror(title="Erro no Banco de Dados!", message=f"Ocorreu um erro no banco de dados:\n")
+            messagebox.askokcancel(title="Valores Inválidos!", message="Algum dos valores inseridos está inválido, por favor, tente novamente.")
 
     def deletar_produto(self, frameToClear):
+        self.master.title("Deletar Produto")
         self.exit_function(frame=frameToClear)
 
         self.master.geometry("350x200")
@@ -224,16 +254,19 @@ class Interface():
             valor = input.get("1.0", "end-1c")
             print(valor)
             if messagebox.askyesno("Confirmar", "Tem certeza que deseja deletar o produto?"):
-                DB.db.deletarProduto(SEARCH_PARAMETER_TO_DELETE=valor)
-                print("Produto deletado com sucesso!")
+                if DB.db.deletarProduto(SEARCH_PARAMETER_TO_DELETE=valor):
+                    texto_input.insert("1.0", f" ")
+                    sleep(1)
+                    texto_input.delete("1.0", "end")
+                    texto_input.insert("1.0", f"Produto deletado com sucesso!")
 
         botao_confirmar_delecao = customtkinter.CTkButton(frame_deletar_produto, text="Deletar Produto", command= lambda: confirmar(input=texto_input))
         botao_confirmar_delecao.pack(expand=True, fill="both")
         botao_voltar_menu_produtos = customtkinter.CTkButton(frame_deletar_produto, hover=True, hover_color="green", text="Voltar ao menu", command=lambda: self.menu_metodos_produto(frameToClear=frame_deletar_produto))
         botao_voltar_menu_produtos.pack(expand=True, fill="both", pady=20)
+        self.verificarProdutosConfirmacao()
 
 def main():
-
     root = customtkinter.CTk()
     app = Interface(root)
     root.mainloop()

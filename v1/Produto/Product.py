@@ -19,13 +19,13 @@ class Produto:
         self.receitaBruta_procentagem = CF+CV+IV+ML
         self.fornecedor_porcentagem = (1 - (float(self.receitaBruta_procentagem)/100)) * 100
         self.categoria_produto=CATEGORIA_PRODUTO
-        
 
     def calcularPrecoDeVenda(self, CP, CF, CV, IV, ML):
         try:
             return float(CP) / (1 - ((int(CF) + int(CV) + int(IV) + int(ML)) / 100))
-        except ValueError as ERROR_TYPE:
+        except ZeroDivisionError as ERROR_TYPE:
             print(F"Erro> {ERROR_TYPE}")
+            return None
 
     def verificarClassificacaoLucro(self, RENTABILIDADE):
         classificacoes = ["Alto", "Lucro médio", "Lucro baixo", "Equilíbrio", "Prejuízo"]
@@ -105,3 +105,7 @@ class Produto:
         GeraradorPlanilha.gerarPlanilha(INFOS_EXCEL, COLUNAS, PORCENTAGENS)
 
 
+
+
+
+()
