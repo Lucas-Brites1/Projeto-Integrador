@@ -11,10 +11,8 @@ from DB import DataBase as DB
 import visualizarProdutos
 from time import sleep
 import tkinter.messagebox as messagebox
-import MySQLdb
 
 class Interface():
-    
     def __init__(self, master):
         self.master = master
         self.master.title("Gerenciador de Produtos")
@@ -45,7 +43,6 @@ class Interface():
         # 2.Botão Sair
         self.btn_sair = customtkinter.CTkButton(frameButton, text="Sair", command=self.master.quit, font=("Segoe UI", 20), width=self.x/2, height=self.y/2)
         self.btn_sair.pack(fill="both", expand=True)
-
         self.buttons_frame.pack()
 
     def menu_metodos_produto(self, frameToClear):
@@ -106,7 +103,7 @@ class Interface():
             label = customtkinter.CTkLabel(frame, text=label_text, font=("Segoe UI", 15), width=50, fg_color="#141414")
             label.pack(fill="both", expand=True, pady=(0, 5))
 
-            text_box = customtkinter.CTkTextbox(frame, width=250, height=0.2, corner_radius=4, font=("Segoe UI", 12))
+            text_box = customtkinter.CTkEntry(frame, width=250, height=0.2, corner_radius=4, font=("Segoe UI", 12), placeholder_text=label_text)
             text_box.pack(fill="both", expand=True, pady=(0, 5))
 
             self.text_areas.append(text_box)  # Adicionando a área de texto à lista
@@ -119,8 +116,6 @@ class Interface():
         button_back = customtkinter.CTkButton(frame, text="Voltar", command=lambda frame=frame: self.menu_metodos_produto(frame), hover=True, hover_color="#FF0000", corner_radius=5, anchor="center", height=10, width=40)
         button_back.pack(expand=True, fill="both", padx=10, pady=10)
 
-        #AO CADASTRAR O PRODUTO DEVERÁ RENDERIZAR UMA NOVA TELA COM CHECKBOX SE QUER CADASTRAR NO BANCO DE DADOS E GERAR O EXCELL
-        
     def visualizar_produtos(self, TABELA):
         TABELA()
 
@@ -136,13 +131,13 @@ class Interface():
             try:
                 # Verifica se o campo atual é numérico
                 if i in [3, 4, 5, 6, 7]:  # Índices dos campos numéricos
-                    dados[self.labels[i]] = float(text_area.get("1.0", "end-1c"))
+                    dados[self.labels[i]] = float(text_area.get())
                 else:
-                    dados[self.labels[i]] = text_area.get("1.0", "end-1c").strip()
+                    dados[self.labels[i]] = text_area.get().strip()
             except ValueError:
-                dados[self.labels[i]] = text_area.get("1.0", "end-1c").strip()  # Se a conversão falhar, mantenha a string
+                dados[self.labels[i]] = text_area.get().strip()  # Se a conversão falhar, mantenha a string
         
-        if not App.cadastrarProduto(interface=True, dados_produto=dados) or App.cadastrarProduto(interface=True, dados_produto=dados) == False:
+        if App.cadastrarProduto(interface=True, dados_produto=dados, confirmarCadastro=messagebox.askyesno(title="Cadastro", message="Gostaria de cadastrar o produto no banco de dados?")) == False:
             messagebox.showerror("Cadastro Erro", "Erro ao cadastrar produto, tente novamente.")
         self.back_to_default_page(frame=frameToDestroyAfterRegisterProduct)
 
@@ -153,18 +148,18 @@ class Interface():
     def alterar_informacoes_produto(self, frameToClear):
         self.master.title("Alterar Produto")
         self.exit_function(frame=frameToClear)
-        self.master.geometry("300x200")
-        alterar_informacoes_frame = customtkinter.CTkFrame(self.master, width=600, height=600, fg_color="#141414")
+        self.master.geometry("350x175")
+        alterar_informacoes_frame = customtkinter.CTkFrame(self.master, width=350, height=350, fg_color="#141414")
         alterar_informacoes_frame.pack(expand=True, fill="both")
 
         busca_parametro_label = customtkinter.CTkLabel(alterar_informacoes_frame, text="Insira o Nome ou ID do Produto:")
         busca_parametro_label.pack(expand=True, fill="both")
 
-        busca_parametro_textbox = customtkinter.CTkTextbox(alterar_informacoes_frame, height=2)
-        busca_parametro_textbox.pack(expand=True, fill="both", pady=15)
+        busca_parametro_textbox = customtkinter.CTkTextbox(alterar_informacoes_frame, width=200, height=30)
+        busca_parametro_textbox.pack(expand=True, fill="both")
 
-        botao_busca_parametro_banco_de_dados = customtkinter.CTkButton(alterar_informacoes_frame, corner_radius=10, hover=True, hover_color="green", text="Buscar", command=lambda: buscar_produto(), width=100)
-        botao_busca_parametro_banco_de_dados.pack(expand=True, fill="both")
+        botao_busca_parametro_banco_de_dados = customtkinter.CTkButton(alterar_informacoes_frame, corner_radius=10, hover=True, hover_color="green", text="Buscar", command=lambda: buscar_produto(), width=150)
+        botao_busca_parametro_banco_de_dados.pack(expand=True, fill="x", pady=5)
 
         def buscar_produto():
             input_value_busca = busca_parametro_textbox.get("1.0", "end-1c")
@@ -181,41 +176,126 @@ class Interface():
                 busca_parametro_label.destroy()
                 busca_parametro_textbox.destroy()
                 botao_busca_parametro_banco_de_dados.destroy()
-                self.master.geometry("250x450")
+                self.master.geometry("300x600")
 
-                # Cria novos campos para editar as informações do produto
+                def mudar_informacoes_valores():
+                    if check_var.get() == "on":
+                        try:
+                            self.exit_function(frame=alterar_informacoes_frame)
+                            alterar_informacoes_frame_adicional = customtkinter.CTkFrame(self.master, width=600, height=600, fg_color="#141414")
+                            alterar_informacoes_frame_adicional.pack(expand=True, fill="both")
+                            self.master.geometry("300x600")
+                        
+                            labels = ["Nome do Produto", "Descrição do Produto", "Categoria do Produto", "Custo do Produto (CP): R$", "Custo Fixo/Adminstrativo (CF): %", "Comissão de Vendas (CV): %", "Impostos (IV): %", "Margem de Lucro (ML): %"]
+                            valores = ["", "", "", produto[0][4] , produto[0][7], produto[0][9], produto[0][11], produto[0][13]]
+                            self.input_values = []
+
+                            for i,label_text in enumerate(labels):
+                                label = customtkinter.CTkLabel(alterar_informacoes_frame_adicional, text=label_text)
+                                label.pack(expand=True, fill="both")
+                                if label_text in ["Nome do Produto", "Descrição do Produto", "Categoria do Produto"]:
+                                    text_box = customtkinter.CTkEntry(alterar_informacoes_frame_adicional, height=1, placeholder_text=produto[0][i+1])
+                                    text_box.insert("end", produto[0][i+1])
+                                else:
+                                    text_box = customtkinter.CTkEntry(alterar_informacoes_frame_adicional, height=1, placeholder_text=valores[i])
+                                text_box.pack(expand=True, fill="both")
+                                self.input_values.append(text_box)
+                            
+                            try:
+                                botao_enviar_alteracoes = customtkinter.CTkButton(alterar_informacoes_frame_adicional, text="Enviar", command=lambda: self.enviar_alteracoes_produto_valores(PRODUTO_ENCONTRADO=produto,labels=labels, frame=alterar_informacoes_frame_adicional))
+                                botao_enviar_alteracoes.pack(expand=True, fill="both")
+                            except Exception as ERR:
+                                print(F"ERRO: {ERR}")
+
+                            button_back = customtkinter.CTkButton(alterar_informacoes_frame_adicional, text="Voltar", command=lambda frame=alterar_informacoes_frame_adicional: self.menu_metodos_produto(frame), hover=True, hover_color="#FF0000", corner_radius=5, anchor="center", height=10, width=40)
+                            button_back.pack(expand=True, fill="both")
+                            return True
+                        except Exception as ERR:
+                            print(F"Erro ao tentar alterar valores do produto: {ERR}")
+                        
+                check_var = customtkinter.StringVar(value="off")    
+                checkbox = customtkinter.CTkCheckBox(alterar_informacoes_frame, text="Recalcular Valores", variable=check_var, onvalue="on", offvalue="off", command=mudar_informacoes_valores, checkbox_width=25, checkbox_height=25,corner_radius=20)
+                checkbox.pack(expand=True)
+
                 novo_nome_label = customtkinter.CTkLabel(alterar_informacoes_frame, text="Novo Nome do Produto:")
                 novo_nome_label.pack(expand=True, fill="both")
-                novo_nome_textbox = customtkinter.CTkTextbox(alterar_informacoes_frame, height=2)
+                novo_nome_textbox = customtkinter.CTkEntry(alterar_informacoes_frame, height=1, placeholder_text=produto[0][1])
                 novo_nome_textbox.pack(expand=True, fill="both")
-                novo_nome_textbox.insert("1.0", produto[0][1])
 
                 nova_descricao_label = customtkinter.CTkLabel(alterar_informacoes_frame, text="Nova Descrição do Produto:")
                 nova_descricao_label.pack(expand=True, fill="both")
-                nova_descricao_textbox = customtkinter.CTkTextbox(alterar_informacoes_frame, height=2)
+                nova_descricao_textbox = customtkinter.CTkEntry(alterar_informacoes_frame, height=1, placeholder_text=produto[0][2])
                 nova_descricao_textbox.pack(expand=True, fill="both")
-                nova_descricao_textbox.insert("1.0", produto[0][2])
 
                 novo_preco_label = customtkinter.CTkLabel(alterar_informacoes_frame, text="Novo Preço do Produto:")
                 novo_preco_label.pack(expand=True, fill="both")
-                novo_preco_textbox = customtkinter.CTkTextbox(alterar_informacoes_frame, height=2)
+                novo_preco_textbox = customtkinter.CTkEntry(alterar_informacoes_frame, height=1, placeholder_text=produto[0][4])
                 novo_preco_textbox.pack(expand=True, fill="both")
-                novo_preco_textbox.insert("1.0", produto[0][3])
 
                 INPUTS_VALORES = [novo_nome_textbox, nova_descricao_textbox, novo_preco_textbox]
-
-                botao_enviar_alteracoes = customtkinter.CTkButton(alterar_informacoes_frame, text="Enviar", command=lambda: self.enviar_alteracoes_produto(produto, text_boxes=INPUTS_VALORES, frame=alterar_informacoes_frame))
+                botao_enviar_alteracoes = customtkinter.CTkButton(alterar_informacoes_frame, text="Enviar", command=lambda prod=produto: self.enviar_alteracoes_produto(prod, text_boxes=INPUTS_VALORES, frame=alterar_informacoes_frame))
                 botao_enviar_alteracoes.pack(expand=True, fill="both", pady=10)
 
-        botao_voltar_menu_produtos = customtkinter.CTkButton(alterar_informacoes_frame, corner_radius=10, hover=True, hover_color="green", text="Voltar ao menu", command=lambda: self.menu_metodos_produto(frameToClear=alterar_informacoes_frame))
-        botao_voltar_menu_produtos.pack(expand=True, fill="both", pady=20)
+        botao_voltar_menu_produtos = customtkinter.CTkButton(alterar_informacoes_frame, corner_radius=10, hover=True, hover_color="green", text="Voltar ao menu", command=lambda: self.menu_metodos_produto(frameToClear=alterar_informacoes_frame), width=150)
+        botao_voltar_menu_produtos.pack(expand=True, fill="x")
         self.verificarProdutosConfirmacao()
 
+    def enviar_alteracoes_produto_valores(self, PRODUTO_ENCONTRADO, labels, frame):
+        dados_produto_atualizado = {}
+        print(dados_produto_atualizado)
+
+        for i, input in enumerate(self.input_values):
+            try:
+                # Verifica se o campo atual é numérico
+                if i in [3, 4, 5, 6, 7]:  # Índices dos campos numéricos
+                    dados_produto_atualizado[labels[i]] = float(input.get())
+                else:
+                    dados_produto_atualizado[labels[i]] = input.get().strip()
+            except ValueError:
+                    dados_produto_atualizado[labels[i]] = input.get().strip()  # Se a conversão falhar, mantenha a string
+
+        produto=App.cadastrarProduto(interface=True, dados_produto=dados_produto_atualizado, confirmarCadastro=False)
+        
+        PRODUTO_ATUALIZADO={
+                            "NOME_PRODUTO": produto.nome, 
+                            "DESCRICAO_PRODUTO":produto.descricao, 
+                            "PRECO_VENDA_PRODUTO":produto.precoVenda, 
+                            "CUSTO_PRODUTO_PORCENT": produto.custo_produto_dados[0],
+                            "CUSTO_PRODUTO_REAIS": produto.custo_produto_dados[1], 
+                            "CUSTO_FIXO_PORCENT":produto.custo_fixo_dados[0], 
+                            "CUSTO_FIXO_REAIS":produto.custo_fixo_dados[1], 
+                            "COMISSAO_PORCENT":produto.comissao_dados[0], 
+                            "COMISSAO_REAIS": produto.comissao_dados[1], 
+                            "IMPOSTO_PORCENT":produto.impostos_dados[0],
+                            "IMPOSTO_REAIS": produto.impostos_dados[1],
+                            "MARGEM_LUCRO_PORCENT": produto.rentabilidade_dados[0], 
+                            "MARGEM_LUCRO_REAIS":produto.rentabilidade_dados[1],
+                            "MARCA_PRODUTO":produto.categoria_produto
+                            }
+        
+        DB.db.atualizarProduto(PRODUTO=PRODUTO_ENCONTRADO, PRODUTO_ATUALIZADO=PRODUTO_ATUALIZADO)
+        self.exit_function(frame=frame)
+
+        self.menu_metodos_produto(frameToClear=frame)
+        messagebox.showinfo(title="Alteração bem sucedidade!", message="Alteração de valores bem sucedida!")
+        
     def enviar_alteracoes_produto(self, produto, text_boxes, frame):
+        
         dados = {
             "NOME": None,
             "DESCRICAO": None,
-            "VALOR": None
+            "PRECO": None,
+            "MARCA": produto[0][3],
+            "CUSTO_PORCENT": produto[0][5], 
+            "CUSTO_REAIS": produto[0][6],
+            "CUSTO_FIXO_PORCENT": produto[0][7],
+            "CUSTO_FIXO_REAIS": produto[0][8],
+            "COMISSAO_PORCENT": produto[0][9],
+            "COMISSAO_REAIS": produto[0][10],
+            "IMPOSTO_PORCENT": produto[0][11],
+            "IMPOSTO_REAIS": produto[0][12],
+            "MARGEM_LUCRO_PORCENT": produto[0][13],
+            "MARGEM_LUCRO_REAIS": produto[0][14]
         }
 
         for i, valor_input in enumerate(text_boxes):
@@ -224,7 +304,7 @@ class Interface():
             elif i==1:
                 dados["DESCRICAO"]=valor_input.get("1.0", "end-1c")
             else:
-                dados["VALOR"]=valor_input.get("1.0", "end-1c")   
+                dados["PRECO"]=valor_input.get("1.0", "end-1c")   
 
         try:
             if DB.db.atualizarProduto(PRODUTO=produto, PRODUTO_ATUALIZADO=dados):
@@ -233,9 +313,11 @@ class Interface():
                     self.menu_metodos_produto(frameToClear=frame)
             else:
                 messagebox.askretrycancel(title="Tentar novamente!", message=f"Erro ao modificar valores do produto, gostaria de tentar novamente?")
+
         except ValueError as ve:
             messagebox.showerror(title="Erro no Banco de Dados!", message=f"Ocorreu um erro no banco de dados:\n")
             messagebox.askokcancel(title="Valores Inválidos!", message="Algum dos valores inseridos está inválido, por favor, tente novamente.")
+            print(F"ERRO ao alterar produto: {ve}")
 
     def deletar_produto(self, frameToClear):
         self.master.title("Deletar Produto")
@@ -252,11 +334,11 @@ class Interface():
 
         def confirmar(input):
             valor = input.get("1.0", "end-1c")
-            print(valor)
+
             if messagebox.askyesno("Confirmar", "Tem certeza que deseja deletar o produto?"):
                 if DB.db.deletarProduto(SEARCH_PARAMETER_TO_DELETE=valor):
                     texto_input.insert("1.0", f" ")
-                    sleep(1)
+                    sleep(0.7)
                     texto_input.delete("1.0", "end")
                     texto_input.insert("1.0", f"Produto deletado com sucesso!")
 
