@@ -8,7 +8,6 @@ def tentar_novamente_cadastro(produto):
         else:
             erro_tentar_cadastrar_novamente = input(f"\nDados de entrada que deveriam ser um número foram inseridos errados, gostaria de tentar cadastrar o produto: {produto[0]} novamente? [S/N]").upper()
 
-
 def inputs_produto():
     """
     PV: Preço de Venda (SERÁ GERADO)

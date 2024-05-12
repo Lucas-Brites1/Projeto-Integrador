@@ -25,6 +25,7 @@ def validar(PRODUTO: Produto) -> bool:
     return True
 
 def __(P) -> bool:
+    # P == produto
     try:
         validar(P)
     except InputErrorValidation as err:

@@ -1,12 +1,11 @@
 from Produto.Product import *
-from Planilha import GeraradorPlanilha 
 from Validar import inputValidation as VALIDAR
 from EntradasProduto import inputs as i
 import random as rd
 from time import sleep
 from DB import DataBase as DB
 
-def cadastrarProduto(interface=False, dados_produto=None) -> Produto:
+def cadastrarProduto(interface=False, dados_produto=None, confirmarCadastro=None) -> Produto:
     random_id = rd.randint(0, 1000000)
     if not interface:
         produto_infos = i.inputs_produto()
@@ -16,7 +15,6 @@ def cadastrarProduto(interface=False, dados_produto=None) -> Produto:
         elif produto_infos is None:
             return print("Não foi possível criar o produto.")
 
-
         # Verifica se os valores são números válidos antes de fazer a conversão
         try:
             CP = float(produto_infos[2])
@@ -24,7 +22,8 @@ def cadastrarProduto(interface=False, dados_produto=None) -> Produto:
             CV = int(produto_infos[4])
             IV = int(produto_infos[5])
             ML = int(produto_infos[6])
-        except ValueError:
+        except ValueError as ERR:
+            print(F"Erro ao cadastrar produto: [App.py] -> {ERR}")
             return None
 
         # Cria o produto com os valores convertidos
@@ -52,19 +51,23 @@ def cadastrarProduto(interface=False, dados_produto=None) -> Produto:
             print("[ERRO NO CADASTRO DO PRODUTO]")
             return None
         
-    DB.db.cadastrarProdutoDB(NOME_PRODUTO=produto.nome, DESCRICAO_PRODUTO=produto.descricao, PRECO_VENDA_PRODUTO=produto.precoVenda)
-    sleep(1.2)
-    produto.TABELA()
+    if confirmarCadastro:
+        DB.db.cadastrarProdutoDB(
+                                 NOME_PRODUTO=produto.nome, 
+                                 DESCRICAO_PRODUTO=produto.descricao, 
+                                 PRECO_VENDA_PRODUTO=produto.precoVenda, 
+                                 CUSTO_PRODUTO_PORCENT= produto.custo_produto_dados[0], 
+                                 CUSTO_PRODUTO_REAIS= produto.custo_produto_dados[1], 
+                                 CUSTO_FIXO_PORCENT=produto.custo_fixo_dados[0], 
+                                 CUSTO_FIXO_REAIS=produto.custo_fixo_dados[1], 
+                                 COMISSAO_PORCENT=produto.comissao_dados[0], 
+                                 COMISSAO_REAIS=produto.comissao_dados[1], 
+                                 IMPOSTO_PORCENT=produto.impostos_dados[0],
+                                 IMPOSTO_REAIS=produto.impostos_dados[1], 
+                                 MARGEM_LUCRO_PORCENT=produto.rentabilidade_dados[0], 
+                                 MARGEM_LUCRO_REAIS=produto.rentabilidade_dados[1],
+                                 MARCA_PRODUTO=produto.categoria_produto
+                                 )
+    
     return produto
-
-"""
-0. nome
-1. Descrição
-2. CP
-3. CF
-4. CV
-5. IV
-6. ML
-7. CATEGORIA
-"""
 
